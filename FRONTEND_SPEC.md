@@ -11,7 +11,7 @@ Build a single-page Vue 3 (Composition API) application to visualize geospatial 
 - CSS: Standard scoped CSS (no Tailwind needed for this prototype)
 
 ## 3. Data Integration
-- **Endpoint:** GET http://localhost:8080/api/v1/assets
+- **Endpoint:** GET `{import.meta.env.VITE_API_BASE_URL}/api/v1/assets`
 - **Asset Interface:**
   ```typescript
   interface SpatialAsset {
@@ -37,6 +37,6 @@ Implement a GitHub Actions workflow (`.github/workflows/deploy.yml`) to build an
 - **Security:** Use AWS OpenID Connect (OIDC). Require `id-token: write` and `contents: read` permissions.
 - **AWS Region:** `us-east-1`
 - **Role ARN:** Sourced from `secrets.AWS_ROLE_ARN`
-- **Build Steps:** Setup Node.js, `npm install`, and `npm run build`.
+- **Build Steps:** Setup Node.js, `npm install`, inject `.env` variables, and `npm run build`.
 - **S3 Sync:** Sync the Vite `dist` output folder to the exact S3 bucket: `s3://spatial-registry-ui-623045221655` (delete removed files).
 - **CloudFront Invalidation:** Invalidate the CloudFront cache path `/*` using the distribution ID sourced from `secrets.CLOUDFRONT_DISTRIBUTION_ID`.
