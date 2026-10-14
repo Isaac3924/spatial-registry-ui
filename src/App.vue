@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import L from 'leaflet'
+import markerIconUrl from 'leaflet/dist/images/marker-icon.png'
+import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png'
 import 'leaflet/dist/leaflet.css'
 
 interface SpatialAsset {
@@ -47,6 +49,16 @@ const form = reactive<AssetFormState>(createEmptyForm())
 const isSubmitting = ref(false)
 const submitError = ref<string | null>(null)
 const submitSuccess = ref(false)
+const DefaultIcon = L.icon({
+  iconUrl: markerIconUrl,
+  shadowUrl: markerShadowUrl,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 let map: L.Map | null = null
 
@@ -137,67 +149,162 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="app">
-    <div v-if="isLoading" class="status status--loading">Loading assets&hellip;</div>
-    <div v-else-if="error" class="status status--error">{{ error }}</div>
+  <main class="app-container">
+    
+    <aside class="sidebar" :class="{ 'collapsed': !isPanelOpen }">
+      <button type="button" class="panel-toggle" @click="isPanelOpen = !isPanelOpen">
+        {{ isPanelOpen ? 'Hide' : 'Add Asset' }}
+      </button>
 
-    <div ref="mapContainer" class="map"></div>
+      <div v-show="isPanelOpen" class="form-content">
+        <h2>New Spatial Asset</h2>
+        <p class="panel-hint">Click the map to set coordinates.</p>
 
-    <button type="button" class="panel-toggle" @click="isPanelOpen = !isPanelOpen">
-      {{ isPanelOpen ? 'Hide' : 'Add Asset' }}
-    </button>
+        <form class="panel-form" @submit.prevent="handleSubmit">
+          <label>
+            Asset ID
+            <input v-model="form.assetId" type="text" required />
+          </label>
 
-    <aside v-if="isPanelOpen" class="panel">
-      <h2>New Spatial Asset</h2>
-      <p class="panel-hint">Click the map to set coordinates.</p>
+          <label>
+            Sensor Type
+            <input v-model="form.sensorType" type="text" required />
+          </label>
 
-      <form class="panel-form" @submit.prevent="handleSubmit">
-        <label>
-          Asset ID
-          <input v-model="form.assetId" type="text" required />
-        </label>
+          <label>
+            Latitude
+            <input v-model.number="form.latitude" type="number" step="any" required />
+          </label>
 
-        <label>
-          Sensor Type
-          <input v-model="form.sensorType" type="text" required />
-        </label>
+          <label>
+            Longitude
+            <input v-model.number="form.longitude" type="number" step="any" required />
+          </label>
 
-        <label>
-          Latitude
-          <input v-model.number="form.latitude" type="number" step="any" required />
-        </label>
+          <label>
+            Cloud Cover %
+            <input v-model.number="form.cloudCoverPercentage" type="number" min="0" max="100" />
+          </label>
 
-        <label>
-          Longitude
-          <input v-model.number="form.longitude" type="number" step="any" required />
-        </label>
+          <label>
+            Image URL
+            <input v-model="form.imageUrl" type="text" />
+          </label>
 
-        <label>
-          Cloud Cover %
-          <input v-model.number="form.cloudCoverPercentage" type="number" min="0" max="100" />
-        </label>
+          <button type="submit" :disabled="isSubmitting">
+            {{ isSubmitting ? 'Saving…' : 'Create Asset' }}
+          </button>
 
-        <label>
-          Image URL
-          <input v-model="form.imageUrl" type="text" />
-        </label>
-
-        <button type="submit" :disabled="isSubmitting">
-          {{ isSubmitting ? 'Saving…' : 'Create Asset' }}
-        </button>
-
-        <p v-if="submitError" class="form-message form-message--error">{{ submitError }}</p>
-        <p v-if="submitSuccess" class="form-message form-message--success">Asset created!</p>
-      </form>
+          <p v-if="submitError" class="form-message form-message--error">{{ submitError }}</p>
+          <p v-if="submitSuccess" class="form-message form-message--success">Asset created!</p>
+        </form>
+      </div>
     </aside>
+
+    <section class="map-area">
+      <div v-if="isLoading" class="status status--loading">Loading assets&hellip;</div>
+      <div v-if="error" class="status status--error">{{ error }}</div>
+      <div ref="mapContainer" class="map"></div>
+    </section>
   </main>
 </template>
 
 <style scoped>
-.app {
-  position: relative;
+.app-container {
+  display: flex;
   width: 100vw;
   height: 100vh;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+.sidebar {
+  width: 320px;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease, padding 0.3s ease;
+  z-index: 1000;
+  overflow: auto;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+  padding: 1.5rem 0.5rem;
+}
+
+.sidebar h2,
+.sidebar p,
+.sidebar label,
+.sidebar input {
+  color: #111827;
+}
+
+.panel-toggle {
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background: #1d4ed8;
+  color: white;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.form-content h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+}
+
+.panel-hint {
+  margin: 0 0 1.5rem;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.panel-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.panel-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.panel-form input {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  background-color: #ffffff;
+}
+
+.panel-form button[type='submit'] {
+  margin-top: 0.5rem;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 4px;
+  background: #16a34a;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.panel-form button[type='submit']:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.map-area {
+  flex-grow: 1;
+  position: relative;
 }
 
 .map {
@@ -214,93 +321,18 @@ onMounted(async () => {
   padding: 0.5rem 1rem;
   border-radius: 4px;
   background: white;
+  color: #111827;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   font-size: 0.9rem;
 }
 
-.status--error {
-  color: #b91c1c;
-}
-
-.panel-toggle {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1001;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  background: #1d4ed8;
-  color: white;
-  cursor: pointer;
-}
-
-.panel {
-  position: absolute;
-  top: 4rem;
-  right: 1rem;
-  z-index: 1000;
-  width: 280px;
-  max-height: calc(100% - 6rem);
-  overflow-y: auto;
-  padding: 1rem;
-  border-radius: 8px;
-  background: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-}
-
-.panel h2 {
-  margin: 0 0 0.25rem;
-  font-size: 1.1rem;
-}
-
-.panel-hint {
-  margin: 0 0 1rem;
-  color: #6b7280;
-  font-size: 0.8rem;
-}
-
-.panel-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.panel-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.85rem;
-}
-
-.panel-form input {
-  padding: 0.4rem 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-
-.panel-form button[type='submit'] {
-  padding: 0.5rem;
-  border: none;
-  border-radius: 4px;
-  background: #16a34a;
-  color: white;
-  cursor: pointer;
-}
-
-.panel-form button[type='submit']:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
+.status--error, .form-message--error {
+  color: #dc2656;
 }
 
 .form-message {
   margin: 0;
   font-size: 0.85rem;
-}
-
-.form-message--error {
-  color: #b91c1c;
 }
 
 .form-message--success {
