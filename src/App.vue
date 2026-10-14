@@ -41,13 +41,7 @@ function createEmptyForm(): AssetFormState {
 }
 
 function togglePanel() {
-  isPanelOpen.value = !isPanelOpen.value
-
-  setTimeout(() => {
-    if (map) {
-      map.invalidateSize();
-    }
-  }, 300);
+  isPanelOpen.value = !isPanelOpen.value;
 }
 
 const mapContainer = ref<HTMLDivElement | null>(null)
@@ -163,10 +157,10 @@ onMounted(async () => {
     
     <aside class="sidebar" :class="{ 'collapsed': !isPanelOpen }">
       <button type="button" class="panel-toggle" @click="togglePanel">
-        {{ isPanelOpen ? 'Hide Panel' : '➕' }}
+        {{ isPanelOpen ? '<<<' : '>>>' }}
       </button>
 
-      <div v-show="isPanelOpen" class="form-content">
+      <div class="form-content">
         <h2>New Spatial Asset</h2>
         <p class="panel-hint">Click the map to set coordinates.</p>
 
@@ -221,7 +215,7 @@ onMounted(async () => {
 
 <style scoped>
 .app-container {
-  display: flex;
+  position: relative;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
@@ -229,20 +223,28 @@ onMounted(async () => {
 }
 
 .sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 320px;
+  height: 100vh;
   background-color: #ffffff;
-  border-right: 1px solid #e5e7eb;
+  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
   padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  transition: width 0.3s ease, padding 0.3s ease;
+  z-index: 1000;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
   overflow: auto;
 }
 
 .sidebar.collapsed {
-  width: 80px;
-  padding: 1.5rem 0.5rem;
+  transform: translateX(-100%);
+}
+
+.form-content {
+  padding: 1.5rem;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .sidebar h2,
@@ -253,19 +255,29 @@ onMounted(async () => {
 }
 
 .panel-toggle {
-  margin-bottom: 1.5rem;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  background: #1d4ed8;
-  color: white;
+  position: absolute;
+  top: 50%;
+  right: -32px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 80px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-left: none;
+  border-radius: 0 16px 16px 0;
+  box-shadow: 4px 0 6px rgba(0, 0, 0, 0.1);
+  color: #1d4ed8;
+  font-weight: 900;
+  letter-spacing: -1px;
   cursor: pointer;
-  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
 }
 
-.form-content h2 {
-  margin: 0 0 0.25rem;
-  font-size: 1.25rem;
+.panel-toggle:hover {
+  background: #f8fafc;
 }
 
 .panel-hint {
@@ -313,8 +325,12 @@ onMounted(async () => {
 }
 
 .map-area {
-  flex-grow: 1;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
 .map {
