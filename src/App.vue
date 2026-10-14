@@ -164,12 +164,12 @@ onMounted(async () => {
 
         <label>
           Latitude
-          <input v-model.number="form.latitude" type="number" step="any" required required />
+          <input v-model.number="form.latitude" type="number" step="any" required />
         </label>
 
         <label>
           Longitude
-          <input v-model.number="form.longitude" type="number" step="any" required required />
+          <input v-model.number="form.longitude" type="number" step="any" required />
         </label>
 
         <label>
