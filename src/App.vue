@@ -40,6 +40,16 @@ function createEmptyForm(): AssetFormState {
   }
 }
 
+function togglePanel() {
+  isPanelOpen.value = !isPanelOpen.value
+
+  setTimeout(() => {
+    if (map) {
+      map.invalidateSize();
+    }
+  }, 300);
+}
+
 const mapContainer = ref<HTMLDivElement | null>(null)
 const isLoading = ref(true)
 const error = ref<string | null>(null)
@@ -152,8 +162,8 @@ onMounted(async () => {
   <main class="app-container">
     
     <aside class="sidebar" :class="{ 'collapsed': !isPanelOpen }">
-      <button type="button" class="panel-toggle" @click="isPanelOpen = !isPanelOpen">
-        {{ isPanelOpen ? 'Hide' : 'Add Asset' }}
+      <button type="button" class="panel-toggle" @click="togglePanel">
+        {{ isPanelOpen ? 'Hide Panel' : '➕' }}
       </button>
 
       <div v-show="isPanelOpen" class="form-content">
